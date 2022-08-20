@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  web:
+    image: nginx:1.22.0
+    ports:
+      - 9000:9000
+    depends_on:
+      - app
+    volumes:
+      - ./docker/web/default.conf:/etc/nginx/conf.d/default.conf
+      - tmp-data:/var/www/html/src/tmp
+  app:
+    build: ./docker/ruby
+    command: bundle exec puma -C config/puma.rb
+    env_file:
+      - ./docker/environments/.env
+    depends_on:
+      - mysql
+    volumes:
+      - .:/var/www/html
+      - bundle_install:/usr/local/bundle
+      - tmp-data:/var/www/html/src/tmp
+  mysql:
+    image: mysql:5.7
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    env_file:
+      - ./docker/environments/.env
+    ports:
+      - 3306:3306
+    volumes:
+      - mysql-data:/var/lib/mysql
+volumes:
+  mysql-data:
+  bundle_install:
+  tmp-data:
